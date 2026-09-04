@@ -1,12 +1,19 @@
 <template>
   <div class="catalog-container">
+    <!-- Banner Principal Estilo Catálogo -->
     <section class="hero-section">
       <div class="hero-content">
+        <!-- Botón de agregar en la esquina superior derecha -->
+        <div class="hero-top-actions">
+          <button class="btn-search btn-add-corner" @click="toggleModal(true)">+ Nueva Categoría</button>
+        </div>
+        
         <h2>Panel de Gestión de Categorías</h2>
-        <p>Administra y controla las categorías activas de tu catálogo.</p>
-        <div class="search-bar">
-          <input type="text" placeholder="Buscar categoría..." v-model="busqueda" />
-          <button class="btn-search" @click="toggleModal(true)">+ Nueva Categoría</button>
+        <p>Administra y controla las categorías activas de tu catálogo en tiempo real.</p>
+        
+        <!-- Buscador independiente -->
+        <div class="search-bar-standalone">
+          <input type="text" class="search-input-clean" placeholder="Buscar categoría por nombre..." v-model="busqueda" />
         </div>
       </div>
     </section>
@@ -40,7 +47,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="categoria in categoriasFiltradas" :key="categoria._id || categoria.id">
+              <tr 
+                v-for="categoria in categoriasFiltradas" 
+                :key="categoria._id || categoria.id"
+                :class="{ 'row-inactive': categoria.activo === false }"
+              >
                 <td>
                   <span class="category-pill">{{ categoria.nombre }}</span>
                 </td>
@@ -99,7 +110,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import api from '../plugins/api'
+
+const $q = useQuasar()
 
 const categorias = ref([])
 const loading = ref(true)
@@ -131,6 +145,7 @@ const obtenerCategorias = async () => {
   } catch (err) {
     error.value = 'Error al cargar las categorías del servidor.'
     categorias.value = []
+    $q.notify({ color: 'negative', position: 'top', message: 'Error al cargar categorías.', icon: 'report_problem' })
   } finally {
     loading.value = false
   }
@@ -148,22 +163,25 @@ const crearCategoria = async () => {
     await api.post('/categorias', nuevaCategoria.value)
     toggleModal(false)
     obtenerCategorias()
+    $q.notify({ color: 'positive', position: 'top', message: 'Categoría creada exitosamente.', icon: 'check' })
   } catch (err) {
-    alert('Error al crear la categoría')
+    $q.notify({ color: 'negative', position: 'top', message: 'Error al crear la categoría.', icon: 'report_problem' })
   }
 }
 
 const toggleEstadoCategoria = async (id, estadoActual) => {
   const nuevoEstado = !estadoActual
-  const mensaje = nuevoEstado ? '¿Estás seguro de activar esta categoría?' : '¿Estás seguro de desactivar esta categoría?'
-  
-  if (confirm(mensaje)) {
-    try {
-      await api.put(`/categorias/${id}`, { activo: nuevoEstado })
-      obtenerCategorias()
-    } catch (err) {
-      alert('Error al cambiar el estado de la categoría')
-    }
+  try {
+    await api.put(`/categorias/${id}`, { activo: nuevoEstado })
+    obtenerCategorias()
+    $q.notify({ 
+      color: 'positive', 
+      position: 'top', 
+      message: nuevoEstado ? 'Categoría activada correctamente.' : 'Categoría desactivada correctamente.', 
+      icon: 'check' 
+    })
+  } catch (err) {
+    $q.notify({ color: 'negative', position: 'top', message: 'Error al cambiar el estado de la categoría.', icon: 'report_problem' })
   }
 }
 
@@ -173,15 +191,17 @@ onMounted(() => {
 </script>
 
 <style>
-/* Reutiliza los mismos estilos limpios de tu vista de productos */
 .catalog-container { min-height: calc(100vh - 70px); background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; }
-.hero-section { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 3rem 2rem; text-align: center; }
-.hero-content { max-width: 700px; margin: 0 auto; }
+.hero-section { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 2.5rem 2rem 3rem 2rem; text-align: center; position: relative; }
+.hero-content { max-width: 700px; margin: 0 auto; position: relative; }
+.hero-top-actions { display: flex; justify-content: flex-end; width: 100%; margin-bottom: 1rem; }
+.btn-add-corner { background-color: #2ecc71 !important; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: background-color 0.2s; }
+.btn-add-corner:hover { background-color: #27ae60 !important; }
 .hero-content h2 { font-size: 2rem; margin-bottom: 0.5rem; }
 .hero-content p { font-size: 1rem; margin-bottom: 1.5rem; opacity: 0.9; }
-.search-bar { display: flex; background: white; padding: 5px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.search-bar input { flex: 1; border: none; padding: 10px 15px; font-size: 1rem; outline: none; border-radius: 4px; }
-.btn-search { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+.search-bar-standalone { display: flex; background: white; padding: 5px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.search-input-clean { width: 100%; border: none; padding: 10px 15px; font-size: 1rem; outline: none; border-radius: 4px; background: transparent; }
+.btn-search { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 .catalog-main { display: flex; max-width: 1300px; margin: 2rem auto; padding: 0 1rem; gap: 2rem; flex: 1; width: 100%; box-sizing: border-box; }
 .sidebar { width: 250px; background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: fit-content; }
 .sidebar h3 { color: #2c3e50; margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem; border-bottom: 2px solid #f4f7f6; padding-bottom: 0.5rem; }
@@ -202,7 +222,7 @@ onMounted(() => {
 .status-dot.active { background-color: #31c48d; }
 .status-dot.inactive { background-color: #f05252; }
 .text-right { text-align: right; }
-.btn-toggle { padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; border: 1px solid; }
+.btn-toggle { padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 600; border: 1px solid; }
 .btn-deactivate { background-color: #fff5f5; color: #e53e3e; border-color: #fed7d7; }
 .btn-deactivate:hover { background-color: #e53e3e; color: white; }
 .btn-activate { background-color: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
@@ -220,4 +240,6 @@ onMounted(() => {
 .btn-primary { background-color: #3498db; color: white; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
 .btn-primary:hover { background-color: #2980b9; }
 .btn-secondary { background-color: #ecf0f1; color: #7f8c8d; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+.styled-table tbody tr.row-inactive { background-color: #f1f3f5 !important; opacity: 0.7; }
+.styled-table tbody tr.row-inactive td { color: #adb5bd !important; border-top: 2px dashed #ced4da; border-bottom: 2px dashed #ced4da; }
 </style>

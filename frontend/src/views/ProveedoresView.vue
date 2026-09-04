@@ -1,29 +1,33 @@
 <template>
   <div class="catalog-container">
-    <!-- Banner Principal -->
+    <!-- Banner Principal Estilo Catálogo -->
     <section class="hero-section">
       <div class="hero-content">
+        <!-- Botón de agregar en la esquina superior derecha -->
+        <div class="hero-top-actions">
+          <button class="btn-search btn-add-corner" @click="toggleModal(true)">+ Nuevo Proveedor</button>
+        </div>
+        
         <h2>Gestión de Proveedores</h2>
         <p>Administra la información de contacto y el directorio de tus proveedores asociados.</p>
-        <div class="search-bar">
-          <input type="text" placeholder="Buscar proveedor por nombre..." v-model="busqueda" />
-          <button class="btn-search" @click="toggleModal(true)">+ Nuevo Proveedor</button>
+        
+        <!-- Buscador independiente -->
+        <div class="search-bar-standalone">
+          <input type="text" class="search-input-clean" placeholder="Buscar proveedor por nombre..." v-model="busqueda" />
         </div>
       </div>
     </section>
 
     <!-- Contenido Principal: Sidebar + Grilla -->
     <div class="catalog-main">
-      <!-- Barra lateral con el contador -->
       <aside class="sidebar">
         <h3>Resumen</h3>
         <div class="counter-box">
-          <span class="counter-label">Proveedores activos</span>
+          <span class="counter-label">Total en BD</span>
           <span class="counter-number">{{ proveedores.length }}</span>
         </div>
       </aside>
 
-      <!-- Grilla de Proveedores -->
       <!-- Tabla de Proveedores -->
       <section class="products-section">
         <div class="section-title">
@@ -43,11 +47,16 @@
                 <th>Teléfono</th>
                 <th>Correo</th>
                 <th>Dirección</th>
-                <th class="text-center">Acciones</th>
+                <th>Estado</th>
+                <th class="text-right">Acciones</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="proveedor in proveedoresFiltrados" :key="proveedor._id || proveedor.id">
+              <tr 
+                v-for="proveedor in proveedoresFiltrados" 
+                :key="proveedor._id || proveedor.id"
+                :class="{ 'row-inactive': proveedor.activo === false }"
+              >
                 <td class="font-weight-bold">
                   <div class="company-cell">
                     <span class="company-icon">🏢</span>
@@ -58,12 +67,20 @@
                 <td>{{ proveedor.telefono || 'Sin teléfono' }}</td>
                 <td>{{ proveedor.email || 'Sin correo' }}</td>
                 <td>{{ proveedor.direccion || 'Sin dirección' }}</td>
-                <td class="text-center">
-                  <button class="btn-table-danger" @click="eliminarProveedor(proveedor._id || proveedor.id)">Eliminar</button>
+                <td>
+                  <span :class="['status-dot', proveedor.activo !== false ? 'active' : 'inactive']"></span>
+                  {{ proveedor.activo !== false ? 'Activo' : 'Inactivo' }}
+                </td>
+                <td class="text-right">
+                  <button 
+                    :class="['btn-toggle', proveedor.activo !== false ? 'btn-deactivate' : 'btn-activate']" 
+                    @click="toggleEstadoProveedor(proveedor._id || proveedor.id, proveedor.activo !== false)">
+                    {{ proveedor.activo !== false ? 'Desactivar' : 'Activar' }}
+                  </button>
                 </td>
               </tr>
               <tr v-if="proveedoresFiltrados.length === 0">
-                <td colspan="6" class="empty-table-state">No se encontraron proveedores registrados.</td>
+                <td colspan="7" class="empty-table-state">No se encontraron proveedores registrados.</td>
               </tr>
             </tbody>
           </table>
@@ -113,7 +130,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import api from '../plugins/api'
+
+const $q = useQuasar()
 
 const proveedores = ref([])
 const loading = ref(true)
@@ -138,7 +158,6 @@ const obtenerProveedores = async () => {
   loading.value = true
   try {
     const response = await api.get('/proveedores')
-    // Acepta tanto un arreglo directo como respuestas paginadas comunes (.docs, .data, .proveedores)
     const data = response.data
     proveedores.value = Array.isArray(data) 
       ? data 
@@ -146,6 +165,7 @@ const obtenerProveedores = async () => {
   } catch (err) {
     error.value = 'Error al cargar los proveedores del servidor.'
     proveedores.value = []
+    $q.notify({ color: 'negative', position: 'top', message: 'Error al cargar proveedores.', icon: 'report_problem' })
   } finally {
     loading.value = false
   }
@@ -163,19 +183,25 @@ const crearProveedor = async () => {
     await api.post('/proveedores', nuevoProveedor.value)
     toggleModal(false)
     obtenerProveedores()
+    $q.notify({ color: 'positive', position: 'top', message: 'Proveedor creado exitosamente.', icon: 'check' })
   } catch (err) {
-    alert('Error al crear el proveedor')
+    $q.notify({ color: 'negative', position: 'top', message: 'Error al crear el proveedor.', icon: 'report_problem' })
   }
 }
 
-const eliminarProveedor = async (id) => {
-  if (confirm('¿Estás seguro de eliminar este proveedor?')) {
-    try {
-      await api.delete(`/proveedores/${id}`)
-      obtenerProveedores()
-    } catch (err) {
-      alert('Error al eliminar el proveedor')
-    }
+const toggleEstadoProveedor = async (id, estadoActual) => {
+  const nuevoEstado = !estadoActual
+  try {
+    await api.put(`/proveedores/${id}`, { activo: nuevoEstado })
+    obtenerProveedores()
+    $q.notify({ 
+      color: 'positive', 
+      position: 'top', 
+      message: nuevoEstado ? 'Proveedor activado correctamente.' : 'Proveedor desactivado correctamente.', 
+      icon: 'check' 
+    })
+  } catch (err) {
+    $q.notify({ color: 'negative', position: 'top', message: 'Error al cambiar el estado del proveedor.', icon: 'report_problem' })
   }
 }
 
@@ -183,10 +209,9 @@ onMounted(() => {
   obtenerProveedores()
 })
 </script>
-
 <style scoped>
 .catalog-container {
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 700px);
   background-color: #f4f7f6;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;

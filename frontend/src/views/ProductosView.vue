@@ -3,11 +3,17 @@
     <!-- Banner Principal Estilo Catálogo -->
     <section class="hero-section">
       <div class="hero-content">
+        <!-- Botón de agregar producto en la esquina superior derecha -->
+        <div class="hero-top-actions">
+          <button class="btn-search btn-add-corner" @click="toggleModal(true)">+ Nuevo Producto</button>
+        </div>
+        
         <h2>Panel de Gestión de Productos</h2>
         <p>Administra, busca y controla el inventario activo de tu catálogo en tiempo real.</p>
-        <div class="search-bar">
-          <input type="text" placeholder="Buscar producto por nombre..." v-model="busqueda" />
-          <button class="btn-search" @click="toggleModal(true)">+ Nuevo Producto</button>
+        
+        <!-- Buscador independiente -->
+        <div class="search-bar-standalone">
+          <input type="text" class="search-input-clean" placeholder="Buscar producto por nombre..." v-model="busqueda" />
         </div>
       </div>
     </section>
@@ -186,10 +192,9 @@ const error = ref(null)
 const showModal = ref(false)
 const busqueda = ref('')
 
-// Variables de paginación ajustadas a 200 elementos
 const paginaActual = ref(1)
 const totalItems = ref(0)
-const limitePorPagina = 200
+const limitePorPagina = 25 // Paginación modificada a 25 elementos por página
 
 const nuevoProducto = ref({
   sku: '',
@@ -199,7 +204,7 @@ const nuevoProducto = ref({
   descripcion: '',
   precio: '',
   stock: '',
-  proveedorId: '' // Asegúrate de incluir el proveedorId si es requerido por tu backend
+  proveedorId: ''
 })
 
 const totalStock = computed(() => {
@@ -281,7 +286,6 @@ const crearProducto = async () => {
 
 const toggleEstadoProducto = async (id, estadoActual) => {
   const nuevoEstado = !estadoActual
-  
   try {
     await api.put(`/productos/${id}`, { activo: nuevoEstado })
     obtenerProductos(paginaActual.value)
@@ -309,13 +313,34 @@ onMounted(() => {
 <style>
 /* Estilos generales y de la tabla */
 .catalog-container { min-height: calc(100vh - 70px); background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; }
-.hero-section { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 3rem 2rem; text-align: center; }
-.hero-content { max-width: 700px; margin: 0 auto; }
+.hero-section { background: linear-gradient(135deg, #2c3e50, #3498db); color: white; padding: 2.5rem 2rem 3rem 2rem; text-align: center; position: relative; }
+.hero-content { max-width: 700px; margin: 0 auto; position: relative; }
+
+/* Posicionamiento del botón en la esquina superior derecha */
+.hero-top-actions {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.btn-add-corner {
+  background-color: #2ecc71 !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: background-color 0.2s;
+}
+.btn-add-corner:hover {
+  background-color: #27ae60 !important;
+}
+
 .hero-content h2 { font-size: 2rem; margin-bottom: 0.5rem; }
 .hero-content p { font-size: 1rem; margin-bottom: 1.5rem; opacity: 0.9; }
-.search-bar { display: flex; background: white; padding: 5px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-.search-bar input { flex: 1; border: none; padding: 10px 15px; font-size: 1rem; outline: none; border-radius: 4px; }
-.btn-search { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+
+/* Buscador independiente */
+.search-bar-standalone { display: flex; background: white; padding: 5px; border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.search-input-clean { width: 100%; border: none; padding: 10px 15px; font-size: 1rem; outline: none; border-radius: 4px; background: transparent; }
+
+.btn-search { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+
 .catalog-main { display: flex; max-width: 1300px; margin: 2rem auto; padding: 0 1rem; gap: 2rem; flex: 1; width: 100%; box-sizing: border-box; }
 .sidebar { width: 250px; background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: fit-content; }
 .sidebar h3 { color: #2c3e50; margin-top: 0; margin-bottom: 1rem; font-size: 1.2rem; border-bottom: 2px solid #f4f7f6; padding-bottom: 0.5rem; }
