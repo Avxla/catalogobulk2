@@ -15,17 +15,24 @@
           </div>
         </button>
       </div>
-      
-      <!-- Navegación principal -->
-      <nav class="nav-links">
-        <router-link to="/admin/productos">Productos</router-link>
-        <router-link to="/admin/categorias">Categorías</router-link>
-        <router-link to="/admin/proveedores">Proveedores</router-link>
-        <router-link to="/admin/importaciones">Importaciones</router-link>
-      </nav>
 
-      <div class="auth-actions">
-        <button @click="cerrarSesion" class="btn-logout">Cerrar Sesión</button>
+      <!-- Botón de menú hamburguesa para móviles -->
+      <button class="mobile-menu-toggle" @click="toggleMobileMenu" :aria-expanded="mobileMenuOpen">
+        <span class="hamburger-icon">{{ mobileMenuOpen ? '✕' : '☰' }}</span>
+      </button>
+      
+      <!-- Navegación principal + Acciones de autenticación agrupadas para responsividad -->
+      <div :class="['header-nav-container', { 'is-open': mobileMenuOpen }]">
+        <nav class="nav-links" @click="mobileMenuOpen = false">
+          <router-link to="/admin/productos">Productos</router-link>
+          <router-link to="/admin/categorias">Categorías</router-link>
+          <router-link to="/admin/proveedores">Proveedores</router-link>
+          <router-link to="/admin/importaciones">Importaciones</router-link>
+        </nav>
+
+        <div class="auth-actions">
+          <button @click="cerrarSesion" class="btn-logout">Cerrar Sesión</button>
+        </div>
       </div>
     </header>
 
@@ -34,7 +41,7 @@
       <router-view />
     </main>
 
-    <!-- PANEL LATERAL IZQUIERDO -->
+    <!-- PANEL LATERAL / DRAWER ADAPTATIVO -->
     <div v-if="showUserModal" class="side-panel-overlay" @click.self="toggleUserModal">
       <div class="side-panel-container">
         <div class="side-panel-header">
@@ -93,6 +100,7 @@ import { useQuasar } from 'quasar'
 const router = useRouter()
 const $q = useQuasar()
 const showUserModal = ref(false)
+const mobileMenuOpen = ref(false)
 
 const perfilUsuario = ref({
   nombre: 'Administrador Principal',
@@ -103,6 +111,10 @@ const perfilUsuario = ref({
 
 const toggleUserModal = () => {
   showUserModal.value = !showUserModal.value
+}
+
+const toggleMobileMenu = () => {
+  mobileMenuOpen.value = !mobileMenuOpen.value
 }
 
 const guardarPerfil = () => {
@@ -147,6 +159,8 @@ const cerrarSesion = () => {
   color: #ffffff; 
   padding: 0.85rem 2rem; 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+  position: relative;
+  z-index: 100;
 }
 
 .header-left { 
@@ -204,6 +218,25 @@ const cerrarSesion = () => {
   letter-spacing: 0.05em;
 }
 
+/* Botón de menú hamburguesa (oculto en escritorio) */
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: 1px solid #334155;
+  color: #ffffff;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+/* Contenedor de navegación y acciones */
+.header-nav-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 /* Navegación y elementos generales */
 .nav-links { 
   display: flex; 
@@ -255,7 +288,7 @@ const cerrarSesion = () => {
   box-sizing: border-box; 
 }
 
-/* Panel lateral izquierdo (Estilo limpio) */
+/* Panel lateral izquierdo / Bottom Sheet adaptable */
 .side-panel-overlay {
   position: fixed;
   top: 0;
@@ -266,6 +299,7 @@ const cerrarSesion = () => {
   backdrop-filter: blur(2px);
   display: flex;
   justify-content: flex-start;
+  align-items: stretch;
   z-index: 1100;
   animation: fadeIn 0.2s ease;
 }
@@ -280,11 +314,17 @@ const cerrarSesion = () => {
   display: flex;
   flex-direction: column;
   animation: slideFromLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
 @keyframes slideFromLeft {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
+}
+
+@keyframes slideFromBottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 @keyframes fadeIn {
@@ -356,6 +396,12 @@ const cerrarSesion = () => {
   overflow-y: auto;
 }
 
+.clean-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .form-section-title {
   font-size: 0.7rem;
   font-weight: 700;
@@ -401,7 +447,7 @@ const cerrarSesion = () => {
   justify-content: flex-end;
   align-items: center;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: auto;
   padding-top: 1.25rem;
   border-top: 1px solid #f1f5f9;
 }
@@ -434,5 +480,88 @@ const cerrarSesion = () => {
 
 .btn-solid-save:hover {
   background-color: #2563eb;
+}
+
+/* Media Queries para Responsividad Avanzada */
+@media (max-width: 992px) {
+  .admin-header {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .mobile-menu-toggle {
+    display: block;
+  }
+
+  .header-nav-container {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    background-color: #0f172a;
+    padding: 1rem 0;
+    margin-top: 0.75rem;
+    border-top: 1px solid #1e293b;
+  }
+
+  .header-nav-container.is-open {
+    display: flex;
+  }
+
+  .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .nav-links a {
+    padding: 0.65rem 1rem;
+  }
+
+  .auth-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #1e293b;
+    display: flex;
+    justify-content: stretch;
+  }
+
+  .btn-logout {
+    width: 100%;
+    text-align: center;
+    padding: 0.65rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .side-panel-overlay {
+    align-items: flex-end; /* Transforma el panel en una hoja inferior (bottom sheet) táctil en móviles */
+    justify-content: center;
+  }
+
+  .side-panel-container {
+    max-width: 100%;
+    height: 90vh;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    animation: slideFromBottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .side-panel-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .side-panel-actions button {
+    width: 100%;
+    text-align: center;
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-subtitle {
+    display: none; /* Oculta el subtítulo en pantallas muy pequeñas para ahorrar espacio */
+  }
 }
 </style>

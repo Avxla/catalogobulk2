@@ -134,13 +134,11 @@ const loading = ref(true)
 const busqueda = ref('')
 const categoriaSeleccionada = ref('')
 
-// Configuración de paginación de 25 en 25
 const paginaActual = ref(1)
 const elementosPorPagina = 25
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
-// Cargar un límite más amplio para asegurar que el filtrado y paginación local funcionen con todos tus registros
 const cargarDatosCatalogo = async () => {
   loading.value = true
   try {
@@ -179,10 +177,9 @@ const cargarDatosCatalogo = async () => {
 
 const seleccionarCategoria = (nombreCategoria) => {
   categoriaSeleccionada.value = nombreCategoria
-  paginaActual.value = 1 // Reiniciar a la primera página al cambiar de categoría
+  paginaActual.value = 1
 }
 
-// Filtrado avanzado por nombre y categoría
 const productosFiltrados = computed(() => {
   if (!Array.isArray(productos.value)) return []
   
@@ -196,12 +193,10 @@ const productosFiltrados = computed(() => {
   })
 })
 
-// Cálculo del total de páginas basado en 25 elementos
 const totalPaginas = computed(() => {
   return Math.ceil(productosFiltrados.value.length / elementosPorPagina)
 })
 
-// Segmentar los productos filtrados para mostrar únicamente 25 por página
 const productosPaginados = computed(() => {
   const inicio = (paginaActual.value - 1) * elementosPorPagina
   const fin = inicio + elementosPorPagina
@@ -211,7 +206,7 @@ const productosPaginados = computed(() => {
 const cambiarPagina = (nuevaPagina) => {
   if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas.value) {
     paginaActual.value = nuevaPagina
-    window.scrollTo({ top: 0, behavior: 'smooth' }) // Sube la pantalla suavemente al cambiar de página
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 }
 
@@ -237,36 +232,12 @@ onMounted(() => {
   flex-direction: column;
 }
 
-/* Grilla configurada exactamente a 5 columnas */
+/* Grilla adaptable profesional */
 .public-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1.2rem;
-}
-
-/* Ajuste responsivo por si la pantalla es más pequeña */
-@media (max-width: 1400px) {
-  .public-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (max-width: 1100px) {
-  .public-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 800px) {
-  .public-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 500px) {
-  .public-grid {
-    grid-template-columns: 1fr;
-  }
+  width: 100%;
 }
 
 .catalog-header {
@@ -306,7 +277,7 @@ onMounted(() => {
 .hero-section {
   background: linear-gradient(135deg, #2c3e50, #3498db);
   color: white;
-  padding: 4rem 2rem;
+  padding: 3.5rem 2rem;
   text-align: center;
 }
 
@@ -355,17 +326,18 @@ onMounted(() => {
 
 .catalog-main {
   display: flex;
-  max-width: 98%; /* Antes max-width: 1200px */
-  margin: 2rem auto;
-  padding: 0 1.5rem;
+  width: 100%;
+  max-width: 100% !important;
+  margin: 2rem 0;
+  padding: 0 2rem;
   gap: 2rem;
   flex: 1;
-  width: 100%;
   box-sizing: border-box;
 }
 
 .sidebar {
-  width: 250px;
+  width: 260px;
+  min-width: 260px;
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
@@ -411,6 +383,7 @@ onMounted(() => {
 
 .products-section {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -519,10 +492,10 @@ onMounted(() => {
   background-color: #2980b9;
 }
 
-/* Estilos de la barra de Paginación */
 .pagination-bar {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 6px;
   padding: 1.5rem 0;
   margin-top: auto;
@@ -571,5 +544,32 @@ onMounted(() => {
   padding: 1.5rem;
   margin-top: 3rem;
   font-size: 0.9rem;
+}
+
+/* Media Queries Profesionales para Responsividad */
+@media (max-width: 992px) {
+  .catalog-main {
+    flex-direction: column;
+    padding: 0 1rem;
+    gap: 1.5rem;
+  }
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .catalog-header {
+    padding: 1rem;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .hero-section {
+    padding: 2.5rem 1rem;
+  }
+  .hero-content h2 {
+    font-size: 1.6rem;
+  }
 }
 </style>

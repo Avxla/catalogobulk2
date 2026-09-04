@@ -145,14 +145,12 @@ const obtenerImportaciones = async () => {
     if (Array.isArray(data) && data.length > 0) {
       importaciones.value = data
     } else {
-      // Si el servidor responde vacío, cargamos los datos de prueba iniciales para que veas los archivos
       importaciones.value = [
         { id: 1, nombreArchivo: 'productos_2026.csv', tipo: 'Productos', totalRegistros: 200, fecha: '2026-06-10' },
         { id: 2, nombreArchivo: 'proveedores_activos.xlsx', tipo: 'Proveedores', totalRegistros: 5, fecha: '2026-06-12' }
       ]
     }
   } catch (err) {
-    // Si hay error de conexión con el backend, mantenemos los datos de prueba de respaldo
     importaciones.value = [
       { id: 1, nombreArchivo: 'productos_2026.csv', tipo: 'Productos', totalRegistros: 120, fecha: '2026-06-10' },
       { id: 2, nombreArchivo: 'proveedores_activos.xlsx', tipo: 'Proveedores', totalRegistros: 15, fecha: '2026-06-12' }
@@ -218,12 +216,13 @@ onMounted(() => {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
 .hero-section.import-hero {
-  background: linear-gradient(135deg, #2c3e50, #2980b9);
+  background: linear-gradient(135deg, #1b4d3e, #27ae60);
   color: white;
-  padding: 2.5rem 2rem 3rem 2rem;
+  padding: 2.5rem 1.5rem 3rem 1.5rem;
   text-align: center;
   position: relative;
 }
@@ -242,12 +241,13 @@ onMounted(() => {
 }
 
 .btn-add-corner {
-  background-color: #2ecc71 !important;
+  background-color: #2e7d32 !important;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   transition: background-color 0.2s;
 }
+
 .btn-add-corner:hover {
-  background-color: #27ae60 !important;
+  background-color: #1b5e20 !important;
 }
 
 .hero-content h2 {
@@ -280,7 +280,7 @@ onMounted(() => {
 }
 
 .btn-search {
-  background-color: #2980b9;
+  background-color: #27ae60;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -291,22 +291,23 @@ onMounted(() => {
 }
 
 .btn-search:hover {
-  background-color: #2471a3;
+  background-color: #219653;
 }
 
 .catalog-main {
   display: flex;
-  width: 100%;
-  max-width: 100% !important;
-  margin: 2rem 0;
-  padding: 0 2rem;
+  max-width: 1300px;
+  margin: 2rem auto;
+  padding: 0 1rem;
   gap: 2rem;
   flex: 1;
+  width: 100%;
   box-sizing: border-box;
 }
 
 .sidebar {
   width: 250px;
+  min-width: 250px;
   background: white;
   padding: 1.5rem;
   border-radius: 8px;
@@ -315,7 +316,7 @@ onMounted(() => {
 }
 
 .sidebar h3 {
-  color: #2c3e50;
+  color: #1b4d3e;
   margin-top: 0;
   margin-bottom: 1rem;
   font-size: 1.2rem;
@@ -324,7 +325,7 @@ onMounted(() => {
 }
 
 .counter-box {
-  background: #f8f9fa;
+  background: #f1f8f5;
   padding: 1rem;
   border-radius: 6px;
   text-align: center;
@@ -333,14 +334,14 @@ onMounted(() => {
 .counter-label {
   display: block;
   font-size: 0.85rem;
-  color: #7f8c8d;
+  color: #55796b;
   margin-bottom: 0.3rem;
 }
 
 .counter-number {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #2c3e50;
+  color: #1b4d3e;
 }
 
 .products-section {
@@ -356,20 +357,21 @@ onMounted(() => {
 }
 
 .section-title h3 {
-  color: #2c3e50;
+  color: #1b4d3e;
   margin: 0;
   font-size: 1.4rem;
 }
 
 .results-count {
-  color: #7f8c8d;
+  color: #55796b;
   font-size: 0.9rem;
 }
 
 .public-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.2rem;
+  width: 100%;
 }
 
 .product-card {
@@ -392,7 +394,7 @@ onMounted(() => {
   font-size: 2rem;
   text-align: center;
   margin-bottom: 0.5rem;
-  background: #ebf5fb;
+  background: #e8f5e9;
   padding: 0.8rem;
   border-radius: 6px;
 }
@@ -409,12 +411,12 @@ onMounted(() => {
   border-radius: 12px;
   font-weight: bold;
   text-transform: uppercase;
-  background-color: #ebf5fb;
-  color: #2980b9;
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
 .product-card h3 {
-  color: #2c3e50;
+  color: #1b4d3e;
   font-size: 1.1rem;
   margin: 0.4rem 0;
   word-break: break-all;
@@ -467,13 +469,18 @@ onMounted(() => {
 
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background-color: rgba(44, 62, 80, 0.6);
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%;
+  background-color: rgba(27, 77, 62, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(3px);
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .modal-content {
@@ -483,6 +490,8 @@ onMounted(() => {
   width: 100%;
   max-width: 450px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .modal-header {
@@ -492,17 +501,52 @@ onMounted(() => {
   margin-bottom: 1.5rem;
 }
 
-.modal-header h3 { margin: 0; color: #2c3e50; }
-.close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #7f8c8d; }
+.modal-header h3 { 
+  margin: 0; 
+  color: #1b4d3e; 
+  font-size: 1.2rem; 
+}
 
-.form-group { margin-bottom: 1.2rem; }
-.form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 0.9rem; color: #34495e; }
-.form-group input, .form-select, .form-file-input { width: 100%; padding: 10px 12px; border: 1px solid #dcdde1; border-radius: 6px; box-sizing: border-box; outline: none; font-size: 0.95rem; background: white; }
+.close-btn { 
+  background: none; 
+  border: none; 
+  font-size: 1.5rem; 
+  cursor: pointer; 
+  color: #7f8c8d; 
+}
 
-.modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 2rem; }
+.form-group { 
+  margin-bottom: 1.2rem; 
+}
+
+.form-group label { 
+  display: block; 
+  margin-bottom: 6px; 
+  font-weight: 500; 
+  font-size: 0.9rem; 
+  color: #34495e; 
+}
+
+.form-group input, .form-select, .form-file-input { 
+  width: 100%; 
+  padding: 10px 12px; 
+  border: 1px solid #dcdde1; 
+  border-radius: 6px; 
+  box-sizing: border-box; 
+  outline: none; 
+  font-size: 0.95rem; 
+  background: white; 
+}
+
+.modal-footer { 
+  display: flex; 
+  justify-content: flex-end; 
+  gap: 10px; 
+  margin-top: 2rem; 
+}
 
 .btn-primary {
-  background-color: #2980b9;
+  background-color: #27ae60;
   color: white;
   padding: 10px 20px;
   border-radius: 6px;
@@ -510,7 +554,7 @@ onMounted(() => {
   cursor: pointer;
   font-weight: 600;
 }
-.btn-primary:hover { background-color: #2471a3; }
+.btn-primary:hover { background-color: #219653; }
 
 .btn-secondary {
   background-color: #ecf0f1;
@@ -520,5 +564,68 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   font-weight: 600;
+}
+
+/* Media Queries de Responsividad Avanzada (alineado al diseño base) */
+@media (max-width: 992px) {
+  .catalog-main {
+    flex-direction: column;
+    padding: 0 1rem;
+    gap: 1.5rem;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .sidebar h3 {
+    display: none;
+  }
+
+  .counter-box {
+    margin-bottom: 0;
+    padding: 0.5rem 1rem;
+  }
+
+  .counter-number {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section.import-hero {
+    padding: 2rem 1rem;
+  }
+
+  .hero-content h2 {
+    font-size: 1.6rem;
+  }
+
+  .hero-content p {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .hero-top-actions {
+    justify-content: center;
+  }
+  .btn-add-corner {
+    width: 100%;
+    text-align: center;
+  }
+  .public-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-content {
+    margin: 1rem;
+    width: calc(100% - 2rem) !important;
+    padding: 1.2rem !important;
+  }
 }
 </style>

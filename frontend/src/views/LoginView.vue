@@ -18,6 +18,11 @@
           <button type="submit" class="btn-submit" :disabled="loading">
             {{ loading ? 'Registrando...' : 'REGISTRARSE' }}
           </button>
+          
+          <!-- Botón de alternancia visible solo en móviles -->
+          <div class="mobile-toggle-link">
+            ¿Ya tienes una cuenta? <span @click="isSignUpMode = false">Inicia sesión</span>
+          </div>
         </form>
       </div>
 
@@ -34,16 +39,20 @@
           <button type="submit" class="btn-submit" :disabled="loading">
             {{ loading ? 'Ingresando...' : 'ENTRAR' }}
           </button>
+
+          <!-- Botón de alternancia visible solo en móviles -->
+          <div class="mobile-toggle-link">
+            ¿No tienes cuenta? <span @click="isSignUpMode = true">Regístrate aquí</span>
+          </div>
         </form>
       </div>
 
-      <!-- Panel Deslizante (Overlay) -->
+      <!-- Panel Deslizante (Overlay) - Oculto en pantallas pequeñas para evitar solapamientos -->
       <div class="overlay-container">
         <div class="overlay">
           <div class="overlay-panel overlay-right">
             <h2>¡Bienvenido!</h2>
             <p>Regístrate y comienza a gestionar tu catálogo de forma eficiente</p>
-            
           </div>
         </div>
       </div>
@@ -139,13 +148,15 @@ const handleRegister = async () => {
 }
 </script>
 
-<style>
+<style scoped>
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f4f7f6; /* Fondo gris claro */
+  min-height: 100vh;
+  background-color: #f4f7f6;
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
 .auth-box {
@@ -170,6 +181,7 @@ const handleRegister = async () => {
   flex-direction: column;
   padding: 0 50px;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .sign-in-container {
@@ -180,6 +192,8 @@ const handleRegister = async () => {
 
 .auth-box.sign-up-mode .sign-in-container {
   transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 .sign-up-container {
@@ -187,12 +201,14 @@ const handleRegister = async () => {
   width: 50%;
   opacity: 0;
   z-index: 1;
+  pointer-events: none;
 }
 
 .auth-box.sign-up-mode .sign-up-container {
   transform: translateX(100%);
   opacity: 1;
   z-index: 5;
+  pointer-events: auto;
   animation: show 0.6s;
 }
 
@@ -217,8 +233,8 @@ const handleRegister = async () => {
 }
 
 .overlay {
-  background: #2c3e50; /* Azul oscuro principal */
-  background: linear-gradient(to right, #3498db, #2c3e50); /* Degradado azul */
+  background: #2c3e50;
+  background: linear-gradient(to right, #3498db, #2c3e50);
   color: #ffffff;
   position: relative;
   left: -100%;
@@ -247,21 +263,9 @@ const handleRegister = async () => {
   transition: transform 0.6s ease-in-out;
 }
 
-.overlay-left {
-  transform: translateX(-20%);
-}
-
-.auth-box.sign-up-mode .overlay-left {
-  transform: translateX(0);
-}
-
 .overlay-right {
   right: 0;
   transform: translateX(0);
-}
-
-.auth-box.sign-up-mode .overlay-right {
-  transform: translateX(20%);
 }
 
 /* Elementos de formulario */
@@ -274,16 +278,24 @@ form {
   padding: 0 20px;
   height: 100%;
   width: 100%;
+  box-sizing: border-box;
 }
 
 h2 {
   font-weight: bold;
   margin-bottom: 20px;
   color: #2c3e50;
+  font-size: 1.8rem;
 }
 
 .overlay-panel h2 {
   color: #ffffff;
+}
+
+.overlay-panel p {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-top: 10px;
 }
 
 .form-group {
@@ -298,49 +310,92 @@ input {
   width: 100%;
   border-radius: 4px;
   box-sizing: border-box;
+  font-size: 1rem;
+  outline: none;
+}
+
+input:focus {
+  border-color: #3498db;
 }
 
 .btn-submit {
   background-color: #3498db;
   color: white;
   border: none;
-  padding: 12px 45px;
+  padding: 12px 35px;
   border-radius: 4px;
   font-weight: bold;
   letter-spacing: 1px;
   cursor: pointer;
   margin-top: 10px;
-  transition: transform 80ms ease-in;
+  transition: background-color 0.2s;
+  width: 100%;
 }
 
 .btn-submit:hover {
   background-color: #2980b9;
 }
 
-.btn-ghost {
-  background-color: transparent;
-  border: 2px solid #ffffff;
-  color: #ffffff;
-  padding: 10px 30px;
-  border-radius: 4px;
+.mobile-toggle-link {
+  display: none;
+  margin-top: 15px;
+  font-size: 0.85rem;
+  color: #7f8c8d;
+}
+
+.mobile-toggle-link span {
+  color: #3498db;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 15px;
 }
 
-.btn-ghost:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
+/* Media Queries para Responsividad Completa en Móviles y Tablets */
+@media (max-width: 768px) {
+  .auth-box {
+    width: 100%;
+    min-height: 420px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
 
-.error-msg {
-  color: #e74c3c;
-  font-size: 0.85rem;
-  margin-top: 10px;
-}
+  .overlay-container {
+    display: none; /* Ocultamos el panel lateral deslizante en pantallas pequeñas */
+  }
 
-.success-msg {
-  color: #27ae60;
-  font-size: 0.85rem;
-  margin-top: 10px;
+  .form-container {
+    width: 100% !important;
+    padding: 0 20px;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  /* Control alternado basado en la clase sign-up-mode para móviles */
+  .sign-in-container {
+    display: flex;
+    z-index: 2;
+  }
+
+  .sign-up-container {
+    display: none;
+    z-index: 1;
+  }
+
+  .auth-box.sign-up-mode .sign-in-container {
+    display: none;
+  }
+
+  .auth-box.sign-up-mode .sign-up-container {
+    display: flex;
+    z-index: 5;
+    animation: none;
+  }
+
+  .mobile-toggle-link {
+    display: block;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+  }
 }
 </style>
