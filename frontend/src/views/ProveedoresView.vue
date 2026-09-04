@@ -24,6 +24,7 @@
       </aside>
 
       <!-- Grilla de Proveedores -->
+      <!-- Tabla de Proveedores -->
       <section class="products-section">
         <div class="section-title">
           <h3>Directorio de Proveedores</h3>
@@ -33,23 +34,39 @@
         <p v-if="loading" class="state-text">Cargando proveedores...</p>
         <p v-else-if="error" class="state-text error">{{ error }}</p>
 
-        <div v-else class="public-grid">
-          <div class="product-card" v-for="proveedor in proveedoresFiltrados" :key="proveedor._id || proveedor.id">
-            <div class="product-img-placeholder">🏢</div>
-            <h3>{{ proveedor.nombre }}</h3>
-            <p class="product-desc"><strong>Contacto:</strong> {{ proveedor.contacto || 'No especificado' }}</p>
-            <p class="product-desc">📞 {{ proveedor.telefono || 'Sin teléfono' }}</p>
-            <p class="product-desc">✉️ {{ proveedor.email || 'Sin correo' }}</p>
-            
-            <div class="card-footer">
-              <span class="price-small">{{ proveedor.direccion || 'Sin dirección' }}</span>
-              <button class="btn-detail danger" @click="eliminarProveedor(proveedor._id || proveedor.id)">Eliminar</button>
-            </div>
-          </div>
-          
-          <div v-if="proveedoresFiltrados.length === 0" class="empty-grid-state">
-            <p>No se encontraron proveedores registrados.</p>
-          </div>
+        <div v-else class="table-container">
+          <table class="styled-table">
+            <thead>
+              <tr>
+                <th>Empresa</th>
+                <th>Contacto</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th>Dirección</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="proveedor in proveedoresFiltrados" :key="proveedor._id || proveedor.id">
+                <td class="font-weight-bold">
+                  <div class="company-cell">
+                    <span class="company-icon">🏢</span>
+                    <span>{{ proveedor.nombre }}</span>
+                  </div>
+                </td>
+                <td>{{ proveedor.contacto || 'No especificado' }}</td>
+                <td>{{ proveedor.telefono || 'Sin teléfono' }}</td>
+                <td>{{ proveedor.email || 'Sin correo' }}</td>
+                <td>{{ proveedor.direccion || 'Sin dirección' }}</td>
+                <td class="text-center">
+                  <button class="btn-table-danger" @click="eliminarProveedor(proveedor._id || proveedor.id)">Eliminar</button>
+                </td>
+              </tr>
+              <tr v-if="proveedoresFiltrados.length === 0">
+                <td colspan="6" class="empty-table-state">No se encontraron proveedores registrados.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
@@ -96,7 +113,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import api from '../services/api'
+import api from '../plugins/api'
 
 const proveedores = ref([])
 const loading = ref(true)
@@ -121,7 +138,11 @@ const obtenerProveedores = async () => {
   loading.value = true
   try {
     const response = await api.get('/proveedores')
-    proveedores.value = Array.isArray(response.data) ? response.data : (response.data.proveedores || [])
+    // Acepta tanto un arreglo directo como respuestas paginadas comunes (.docs, .data, .proveedores)
+    const data = response.data
+    proveedores.value = Array.isArray(data) 
+      ? data 
+      : (data.docs || data.data || data.proveedores || [])
   } catch (err) {
     error.value = 'Error al cargar los proveedores del servidor.'
     proveedores.value = []
@@ -441,5 +462,81 @@ onMounted(() => {
   border: none;
   cursor: pointer;
   font-weight: 600;
+}
+.table-container {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow-x: auto;
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.styled-table th {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  padding: 14px 16px;
+  font-weight: 600;
+  border-bottom: 2px solid #eaedf0;
+}
+
+.styled-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0f2f5;
+  vertical-align: middle;
+}
+
+.styled-table tbody tr:hover {
+  background-color: #fafbfc;
+}
+
+.company-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.company-icon {
+  font-size: 1.2rem;
+  background: #f4ecf7;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+.font-weight-bold {
+  font-weight: 600;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.btn-table-danger {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.btn-table-danger:hover {
+  background-color: #f87171;
+  color: white;
+}
+
+.empty-table-state {
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
 }
 </style>

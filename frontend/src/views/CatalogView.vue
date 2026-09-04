@@ -5,15 +5,9 @@
       <div class="logo">
         <h1>Catálogo Bulk</h1>
       </div>
-      <nav class="nav-links">
-        <a @click.prevent="alertarAcceso">Productos</a>
-        <a @click.prevent="alertarAcceso">Categorías</a>
-        <a @click.prevent="alertarAcceso">Proveedores</a>
-        
-        <a @click.prevent="alertarAcceso">Importaciones</a>
-      </nav>
-      <div class="auth-actions">
-        <router-link to="/login" class="btn-login">Iniciar Sesión</router-link>
+      <div class="nav-links">
+        <router-link to="/login" class="btn-login" v-if="!authStore.token">Iniciar Sesión</router-link>
+        <router-link to="/admin/productos" class="btn-login" v-else>Panel Admin</router-link>
       </div>
     </header>
 
@@ -23,7 +17,7 @@
         <h2>Soluciones al por mayor para tu negocio</h2>
         <p>Explora nuestro inventario actualizado en tiempo real. Calidad, confianza y los mejores precios del mercado.</p>
         <div class="search-bar">
-          <input type="text" placeholder="¿Qué producto estás buscando?" v-model="busqueda" />
+          <input type="text" placeholder="¿Qué producto estás buscando?" v-model="busqueda" @input="paginaActual = 1" />
           <button class="btn-search">Buscar</button>
         </div>
       </div>
@@ -31,42 +25,86 @@
 
     <!-- Contenido Principal: Sidebar de Filtros + Grilla de Productos -->
     <div class="catalog-main">
-      <!-- Barra lateral de categorías (Simulada) -->
+      <!-- Barra lateral de categorías dinámicas -->
       <aside class="sidebar">
         <h3>Categorías</h3>
         <ul>
-          <li><a @click.prevent="alertarAcceso">Todos los productos</a></li>
-          <li><a @click.prevent="alertarAcceso">Electrónica y Tecnología</a></li>
-          <li><a @click.prevent="alertarAcceso">Alimentos y Bebidas</a></li>
-          <li><a @click.prevent="alertarAcceso">Hogar y Oficina</a></li>
-          <li><a @click.prevent="alertarAcceso">Construcción y Ferretería</a></li>
+          <li>
+            <a 
+              href="#" 
+              :class="{ active: categoriaSeleccionada === '' }" 
+              @click.prevent="seleccionarCategoria('')"
+            >
+              Todos los productos
+            </a>
+          </li>
+          <li v-for="cat in categorias" :key="cat._id || cat.id">
+            <a 
+              href="#" 
+              :class="{ active: categoriaSeleccionada === cat.nombre }"
+              @click.prevent="seleccionarCategoria(cat.nombre)"
+            >
+              {{ cat.nombre }}
+            </a>
+          </li>
         </ul>
-
-        <div class="sidebar-banner">
-          <h4>¿Eres proveedor?</h4>
-          <p>Inicia sesión y gestiona tus catálogos de forma directa.</p>
-          <router-link to="/login" class="btn-sidebar">Acceder</router-link>
-        </div>
       </aside>
 
-      <!-- Grilla de Productos Extendida -->
+      <!-- Grilla de Productos Conectada al Backend -->
       <section class="products-section">
         <div class="section-title">
           <h3>Productos Destacados</h3>
-          <span class="results-count">Mostrando catálogo público</span>
+          <span class="results-count">Mostrando página {{ paginaActual }} de {{ totalPaginas || 1 }} ({{ productosFiltrados.length }} total)</span>
         </div>
 
-        <div class="public-grid">
-          <div class="product-card" v-for="i in 6" :key="i">
-            <div class="product-img-placeholder">📦</div>
-            <span class="category-tag">Categoría General</span>
-            <h3>Producto Comercialización #{{ i }}</h3>
-            <p class="product-desc">Descripción breve del producto al por mayor, ideal para distribución masiva.</p>
+        <p v-if="loading" class="state-text">Cargando catálogo en tiempo real...</p>
+        
+        <div class="public-grid" v-else-if="productosPaginados.length > 0">
+          <div class="product-card" v-for="producto in productosPaginados" :key="producto._id || producto.id">
+            <div class="product-img-wrapper">
+              <img 
+                :src="producto.imagenUrl || 'https://via.placeholder.com/150'" 
+                alt="Imagen del producto" 
+                class="product-img"
+              />
+            </div>
+            <span class="category-tag">{{ producto.categoria || 'General' }}</span>
+            <h3>{{ producto.nombre }}</h3>
+            <p class="product-desc">{{ producto.descripcion || 'Sin descripción disponible.' }}</p>
             <div class="card-footer">
-              <span class="price">$149.99</span>
-              <button class="btn-detail" @click="alertarAcceso">Ver más</button>
+              <span class="price">${{ Number(producto.precio).toFixed(2) }}</span>
+              <button class="btn-detail" @click="verDetalle(producto)">Ver más</button>
             </div>
           </div>
+        </div>
+
+        <div v-else class="empty-table-state">
+          No se encontraron productos disponibles con los filtros seleccionados.
+        </div>
+
+        <!-- Barra de Paginación de 25 en 25 -->
+        <div class="pagination-bar" v-if="totalPaginas > 1">
+          <button 
+            class="page-btn" 
+            :disabled="paginaActual === 1" 
+            @click="cambiarPagina(paginaActual - 1)">
+            Anterior
+          </button>
+          
+          <button 
+            v-for="p in totalPaginas" 
+            :key="p" 
+            :class="['page-btn', { active: p === paginaActual }]" 
+            @click="cambiarPagina(p)">
+            {{ p }}
+          </button>
+
+          <button 
+            class="page-btn" 
+            :disabled="paginaActual === totalPaginas" 
+            @click="cambiarPagina(paginaActual + 1)">
+            Siguiente
+          </button>
         </div>
       </section>
     </div>
@@ -79,34 +117,115 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from '../stores/auth.js'
+import api from '../plugins/api'
 
 const router = useRouter()
 const route = useRoute()
 const $q = useQuasar()
-const authStore = useAuthStore() // Inicializas tu store de Pinia
+const authStore = useAuthStore()
 
+const productos = ref([])
+const categorias = ref([])
+const loading = ref(true)
 const busqueda = ref('')
+const categoriaSeleccionada = ref('')
+
+// Configuración de paginación de 25 en 25
+const paginaActual = ref(1)
+const elementosPorPagina = 25
 
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
-const alertarAcceso = () => {
-  // Verificas la autenticación directamente desde el estado de Pinia
-  if (!authStore.token) { // O puedes usar authStore.isAuthenticated si lo tienes definido así
+// Cargar un límite más amplio para asegurar que el filtrado y paginación local funcionen con todos tus registros
+const cargarDatosCatalogo = async () => {
+  loading.value = true
+  try {
+    const [resProductos, resCategorias] = await Promise.all([
+      api.get('/productos?limit=500'),
+      api.get('/categorias')
+    ])
+
+    if (resProductos.data && Array.isArray(resProductos.data.data)) {
+      productos.value = resProductos.data.data
+    } else if (Array.isArray(resProductos.data)) {
+      productos.value = resProductos.data
+    } else {
+      productos.value = []
+    }
+
+    if (Array.isArray(resCategorias.data)) {
+      categorias.value = resCategorias.data
+    } else if (resCategorias.data && Array.isArray(resCategorias.data.data)) {
+      categorias.value = resCategorias.data.data
+    } else {
+      categorias.value = []
+    }
+
+  } catch (err) {
     $q.notify({
-      type: 'warning',
-      message: 'Debes iniciar sesión para acceder a esta sección.',
-      position: 'top-right',
-      timeout: 2500
+      color: 'negative',
+      position: 'top',
+      message: 'Error al sincronizar los productos con el servidor.',
+      icon: 'report_problem'
     })
-    router.push('/login')
-  } else {
-    console.log("Usuario ya autenticado mediante Pinia, acceso permitido.")
+  } finally {
+    loading.value = false
   }
 }
+
+const seleccionarCategoria = (nombreCategoria) => {
+  categoriaSeleccionada.value = nombreCategoria
+  paginaActual.value = 1 // Reiniciar a la primera página al cambiar de categoría
+}
+
+// Filtrado avanzado por nombre y categoría
+const productosFiltrados = computed(() => {
+  if (!Array.isArray(productos.value)) return []
+  
+  return productos.value.filter(p => {
+    const estaActivo = p.activo !== false
+    const coincideNombre = p.nombre && p.nombre.toLowerCase().includes(busqueda.value.toLowerCase())
+    const coincideCategoria = categoriaSeleccionada.value === '' || 
+      (p.categoria && p.categoria.toLowerCase() === categoriaSeleccionada.value.toLowerCase())
+
+    return estaActivo && coincideNombre && coincideCategoria
+  })
+})
+
+// Cálculo del total de páginas basado en 25 elementos
+const totalPaginas = computed(() => {
+  return Math.ceil(productosFiltrados.value.length / elementosPorPagina)
+})
+
+// Segmentar los productos filtrados para mostrar únicamente 25 por página
+const productosPaginados = computed(() => {
+  const inicio = (paginaActual.value - 1) * elementosPorPagina
+  const fin = inicio + elementosPorPagina
+  return productosFiltrados.value.slice(inicio, fin)
+})
+
+const cambiarPagina = (nuevaPagina) => {
+  if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas.value) {
+    paginaActual.value = nuevaPagina
+    window.scrollTo({ top: 0, behavior: 'smooth' }) // Sube la pantalla suavemente al cambiar de página
+  }
+}
+
+const verDetalle = (producto) => {
+  $q.notify({
+    type: 'info',
+    message: `Producto seleccionado: ${producto.nombre} - Stock: ${producto.stock} un.`,
+    position: 'top-right'
+  })
+}
+
+onMounted(() => {
+  cargarDatosCatalogo()
+})
 </script>
 
 <style scoped>
@@ -118,7 +237,38 @@ const alertarAcceso = () => {
   flex-direction: column;
 }
 
-/* Encabezado */
+/* Grilla configurada exactamente a 5 columnas */
+.public-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.2rem;
+}
+
+/* Ajuste responsivo por si la pantalla es más pequeña */
+@media (max-width: 1400px) {
+  .public-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .public-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .public-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .public-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .catalog-header {
   display: flex;
   justify-content: space-between;
@@ -139,20 +289,6 @@ const alertarAcceso = () => {
   gap: 1.5rem;
 }
 
-.nav-links a {
-  color: #ffffff;
-  text-decoration: none;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0.5rem 1rem;
-  transition: background 0.3s;
-  border-radius: 4px;
-}
-
-.nav-links a:hover {
-  background-color: #3498db;
-}
-
 .btn-login {
   background-color: #3498db;
   color: #ffffff;
@@ -167,7 +303,6 @@ const alertarAcceso = () => {
   background-color: #2980b9;
 }
 
-/* Banner Hero */
 .hero-section {
   background: linear-gradient(135deg, #2c3e50, #3498db);
   color: white;
@@ -218,23 +353,17 @@ const alertarAcceso = () => {
   cursor: pointer;
 }
 
-.btn-search:hover {
-  background-color: #2980b9;
-}
-
-/* Cuerpo principal (Sidebar + Grilla) */
 .catalog-main {
   display: flex;
-  max-width: 1200px;
+  max-width: 98%; /* Antes max-width: 1200px */
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
   gap: 2rem;
   flex: 1;
   width: 100%;
   box-sizing: border-box;
 }
 
-/* Sidebar */
 .sidebar {
   width: 250px;
   background: white;
@@ -256,7 +385,7 @@ const alertarAcceso = () => {
 .sidebar ul {
   list-style: none;
   padding: 0;
-  margin: 0 0 2rem 0;
+  margin: 0;
 }
 
 .sidebar ul li {
@@ -268,45 +397,22 @@ const alertarAcceso = () => {
   text-decoration: none;
   cursor: pointer;
   transition: color 0.2s;
+  display: block;
+  padding: 6px 8px;
+  border-radius: 4px;
 }
 
-.sidebar ul li a:hover {
-  color: #3498db;
+.sidebar ul li a:hover,
+.sidebar ul li a.active {
+  color: #ffffff;
+  background-color: #3498db;
   font-weight: 500;
 }
 
-.sidebar-banner {
-  background: #f4f7f6;
-  padding: 1rem;
-  border-radius: 6px;
-  text-align: center;
-}
-
-.sidebar-banner h4 {
-  color: #2c3e50;
-  margin: 0 0 0.5rem 0;
-}
-
-.sidebar-banner p {
-  font-size: 0.85rem;
-  color: #7f8c8d;
-  margin-bottom: 1rem;
-}
-
-.btn-sidebar {
-  display: inline-block;
-  background-color: #2c3e50;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 4px;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-/* Sección de Productos */
 .products-section {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-title {
@@ -327,12 +433,6 @@ const alertarAcceso = () => {
   font-size: 0.9rem;
 }
 
-.public-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1.5rem;
-}
-
 .product-card {
   background: #ffffff;
   padding: 1.5rem;
@@ -349,13 +449,22 @@ const alertarAcceso = () => {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.product-img-placeholder {
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: 0.5rem;
+.product-img-wrapper {
+  width: 100%;
+  height: 140px;
   background: #f4f7f6;
-  padding: 1rem;
   border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .category-tag {
@@ -375,6 +484,10 @@ const alertarAcceso = () => {
   color: #7f8c8d;
   font-size: 0.85rem;
   margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .card-footer {
@@ -406,7 +519,51 @@ const alertarAcceso = () => {
   background-color: #2980b9;
 }
 
-/* Footer */
+/* Estilos de la barra de Paginación */
+.pagination-bar {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 1.5rem 0;
+  margin-top: auto;
+}
+
+.page-btn {
+  background-color: #ffffff;
+  border: 1px solid #dcdde1;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #2c3e50;
+  transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.page-btn.active {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.state-text, .empty-table-state {
+  text-align: center;
+  padding: 3rem;
+  color: #7f8c8d;
+  background: white;
+  border-radius: 8px;
+}
+
 .catalog-footer {
   background-color: #2c3e50;
   color: white;

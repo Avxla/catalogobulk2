@@ -60,19 +60,22 @@ const crear = async (datos) => {
 };
 
 const actualizar = async (id, datos) => {
-
     return await Producto.findByIdAndUpdate(
         id,
         datos,
         {
-            new: true,
+            returnDocument: 'after',
             runValidators: true
         }
     );
 };
 
-const eliminar = async (id) => {
-    return await Producto.findByIdAndDelete(id);
+const eliminar = async (id, activo) => {
+    return await Producto.findByIdAndUpdate(
+        id,
+        { activo },
+        { new: true, runValidators: true }
+    );
 };
 
 const estadisticas = async () => {

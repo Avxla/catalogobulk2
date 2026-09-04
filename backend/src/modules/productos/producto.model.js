@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const productoSchema = new mongoose.Schema(
     {
+        activo: {
+            type: Boolean,
+            default: true,
+            index: true
+        },
+
         sku: {
             type: String,
             required: true,
@@ -71,17 +77,16 @@ productoSchema.pre("save", function (next) {
     next();
 });
 
-productoSchema.pre("findOneAndUpdate", function (next) {
-
+productoSchema.pre("findOneAndUpdate", function () {
     const update = this.getUpdate();
 
     if (update.stock !== undefined) {
-        update.disponible = update.stock > 0;
+        if (!update.$set) update.$set = {};
+        update.$set.disponible = update.stock > 0;
+    } else if (update.$set && update.$set.stock !== undefined) {
+        update.$set.disponible = update.$set.stock > 0;
     }
-
-    next();
 });
-
 export default mongoose.model(
     "Producto",
     productoSchema

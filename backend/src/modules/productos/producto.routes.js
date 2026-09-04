@@ -9,40 +9,31 @@ const router = Router();
 
 router.get(
     "/",
-    auth,
     productoController.listar
 );
 
 router.get(
     "/stats",
-    auth,
     productoController.estadisticas
 );
 
 router.get(
     "/:id",
-    auth,
     productoController.obtener
 );
 
 router.post(
     "/",
-    auth,
-    rol("admin"),
     productoController.crear
 );
 
 router.put(
     "/:id",
-    auth,
-    rol("admin"),
     productoController.actualizar
 );
 
 router.delete(
     "/:id",
-    auth,
-    rol("admin"),
     productoController.eliminar
 );
 

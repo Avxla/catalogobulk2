@@ -40,15 +40,10 @@
       <!-- Panel Deslizante (Overlay) -->
       <div class="overlay-container">
         <div class="overlay">
-          <div class="overlay-panel overlay-left">
-            <h2>¡Hola de nuevo!</h2>
-            <p>Si ya tienes una cuenta, conéctate con tus datos personales</p>
-            <button class="btn-ghost" @click="isSignUpMode = false">INICIAR SESIÓN</button>
-          </div>
           <div class="overlay-panel overlay-right">
             <h2>¡Bienvenido!</h2>
             <p>Regístrate y comienza a gestionar tu catálogo de forma eficiente</p>
-            <button class="btn-ghost" @click="isSignUpMode = true">CREAR CUENTA</button>
+            
           </div>
         </div>
       </div>

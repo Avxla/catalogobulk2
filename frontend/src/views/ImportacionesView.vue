@@ -70,6 +70,18 @@
               <option value="Proveedores">Proveedores</option>
             </select>
           </div>
+
+          <!-- Campo obligatorio requerido por el backend (proveedorId) -->
+          <div class="form-group">
+            <label>Proveedor Asociado</label>
+            <input 
+              type="text" 
+              v-model="nuevaImportacion.proveedorId" 
+              placeholder="ID del proveedor (Ej: 60d21b46...)" 
+              required 
+            />
+          </div>
+
           <div class="form-group">
             <label>Seleccionar archivo (.csv, .xlsx)</label>
             <input type="file" @change="handleFileUpload" class="form-file-input" required />
@@ -86,7 +98,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import api from '../services/api'
+import api from '../plugins/api'
 
 const importaciones = ref([])
 const loading = ref(true)
@@ -96,6 +108,7 @@ const busqueda = ref('')
 
 const nuevaImportacion = ref({
   tipo: 'Productos',
+  proveedorId: '',
   archivo: null
 })
 
@@ -118,12 +131,10 @@ const obtenerImportaciones = async () => {
   try {
     const response = await api.get('/imports')
     
-    // Forzamos a que siempre sea un array (revisa si tu backend lo manda dentro de .data o .docs)
     const data = response.data.docs || response.data.data || response.data
     importaciones.value = Array.isArray(data) ? data : []
 
   } catch (err) {
-    // Valor por defecto en caso de que falle la petición
     importaciones.value = [
       { id: 1, nombreArchivo: 'productos_2026.csv', tipo: 'Productos', totalRegistros: 120, fecha: '2026-06-10' },
       { id: 2, nombreArchivo: 'proveedores_activos.xlsx', tipo: 'Proveedores', totalRegistros: 15, fecha: '2026-06-12' }
@@ -136,7 +147,7 @@ const obtenerImportaciones = async () => {
 const toggleModal = (isOpen) => {
   showModal.value = isOpen
   if (!isOpen) {
-    nuevaImportacion.value = { tipo: 'Productos', archivo: null }
+    nuevaImportacion.value = { tipo: 'Productos', proveedorId: '', archivo: null }
   }
 }
 
@@ -148,17 +159,18 @@ const subirArchivo = async () => {
   try {
     const formData = new FormData()
     formData.append('tipo', nuevaImportacion.value.tipo)
+    formData.append('proveedorId', nuevaImportacion.value.proveedorId)
+    
     if (nuevaImportacion.value.archivo) {
       formData.append('file', nuevaImportacion.value.archivo)
     }
     
-    await api.post('/importaciones', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    await api.post('/imports', formData)
     
     toggleModal(false)
     obtenerImportaciones()
   } catch (err) {
+    console.error(err.response?.data || err)
     alert('Error al procesar la importación del archivo')
   }
 }
@@ -166,10 +178,9 @@ const subirArchivo = async () => {
 const eliminarImportacion = async (id) => {
   if (confirm('¿Estás seguro de eliminar este registro del historial?')) {
     try {
-      await api.delete(`/importaciones/${id}`)
+      await api.delete(`/imports/${id}`)
       obtenerImportaciones()
     } catch (err) {
-      // Filtrado local en caso de prueba visual rápida
       importaciones.value = importaciones.value.filter(i => (i._id || i.id) !== id)
     }
   }

@@ -18,7 +18,7 @@ router.post(
     "/",
     auth,
     
-    upload.single("archivo"),
+    upload.single("file"),
     importController.crear
 );
 

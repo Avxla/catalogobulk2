@@ -8,7 +8,6 @@ const proveedorSchema = new mongoose.Schema(
             unique: true,
             trim: true
         },
-
         slug: {
             type: String,
             required: true,
@@ -17,35 +16,37 @@ const proveedorSchema = new mongoose.Schema(
             trim: true,
             match: /^[a-z0-9]+(?:-[a-z0-9]+)*$/
         },
-
+        contacto: {
+            type: String,
+            trim: true,
+            default: null
+        },
+        telefono: {
+            type: String,
+            trim: true,
+            default: null
+        },
+        email: {
+            type: String,
+            trim: true,
+            lowercase: true,
+            default: null
+        },
+        direccion: {
+            type: String,
+            trim: true,
+            default: null
+        },
         contactoEmail: {
             type: String,
             default: null,
             lowercase: true,
-            trim: true,
-            validate: {
-                validator: function (valor) {
-                    if (valor === null) return true;
-
-                    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
-                },
-                message: "contactoEmail no tiene un formato válido"
-            }
+            trim: true
         },
-
         logoUrl: {
             type: String,
-            default: null,
-            validate: {
-                validator: function (valor) {
-                    if (valor === null) return true;
-
-                    return /^https?:\/\/.+/i.test(valor);
-                },
-                message: "logoUrl debe ser una URL http(s) válida"
-            }
+            default: null
         },
-
         activo: {
             type: Boolean,
             default: true
@@ -56,7 +57,4 @@ const proveedorSchema = new mongoose.Schema(
     }
 );
 
-export default mongoose.model(
-    "Proveedor",
-    proveedorSchema
-);
+export default mongoose.model("Proveedor", proveedorSchema);

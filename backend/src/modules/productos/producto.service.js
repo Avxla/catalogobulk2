@@ -14,13 +14,13 @@ const error = (mensaje, status) => {
 const listar = async (query) => {
 
     let page = Number(query.page) || 1;
-    let limit = Number(query.limit) || 20;
+    let limit = Number(query.limit) || 500; // Ampliado a 500 para soportar la paginación del catálogo
 
     if (page < 1) page = 1;
 
-    if (limit < 1) limit = 20;
+    if (limit < 1) limit = 500;
 
-    if (limit > 100) limit = 100;
+    if (limit > 500) limit = 500; // Permitir hasta 500 registros para el catálogo
 
     let disponible;
 
@@ -80,7 +80,7 @@ const crear = async (datos) => {
         !datos.proveedorId
     ) {
         throw error(
-            "sku, nombre, precio, categoria y proveedorId son obligatorios",
+            "sku, nombre, precio, categoria y proveedorId son obligatorios[cite: 9]",
             400
         );
     }
@@ -173,10 +173,10 @@ const actualizar = async (id, datos) => {
         );
     }
 
-    const producto =
+    const productoExistente =
         await productoRepository.obtenerPorId(id);
 
-    if (!producto) {
+    if (!productoExistente) {
         throw error(
             "Producto no encontrado",
             404
@@ -291,10 +291,11 @@ const actualizar = async (id, datos) => {
             datos.proveedorId;
     }
 
-    return await productoRepository.actualizar(
-        id,
-        actualizacion
-    );
+    if (datos.activo !== undefined) {
+        actualizacion.activo = datos.activo;
+    }
+
+    return await productoRepository.actualizar(id, actualizacion);
 };
 
 const eliminar = async (id) => {

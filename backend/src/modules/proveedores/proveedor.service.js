@@ -76,10 +76,22 @@ const obtenerPorId = async (id) => {
 
 const crear = async (datos) => {
 
+    if (!datos.slug && datos.nombre) {
+        datos.slug = datos.nombre
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+    }
+
     const {
         nombre,
         slug,
-        contactoEmail,
+        contacto,
+        telefono,
+        email,
+        direccion,
         logoUrl
     } = datos;
 
@@ -120,14 +132,14 @@ const crear = async (datos) => {
     return await proveedorRepository.crear({
         nombre: nombreLimpio,
         slug: slugLimpio,
-        contactoEmail:
-            contactoEmail?.trim().toLowerCase() || null,
-        logoUrl:
-            logoUrl?.trim() || null,
+        contacto: contacto?.trim() || null,
+        telefono: telefono?.trim() || null,
+        email: email?.trim().toLowerCase() || null,
+        direccion: direccion?.trim() || null,
+        logoUrl: logoUrl?.trim() || null,
         activo: true
     });
 };
-
 const actualizar = async (id, datos) => {
 
     if (!mongoose.isValidObjectId(id)) {
