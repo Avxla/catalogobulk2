@@ -1,8 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import MainLayout from '../layouts/MainLayout.vue'
 import CatalogView from '../views/CatalogView.vue'
 import LoginView from '../views/LoginView.vue'
- import { Notify } from 'quasar'
+import { Notify } from 'quasar'
 const routes = [
   {
     path: '/',
@@ -17,14 +17,6 @@ const routes = [
     component: MainLayout,
     meta: { requiresAuth: true }, // Todo lo que esté aquí dentro requiere sesión
     children: [
-      {
-        path: '',
-        component: CatalogView // 👈 Al entrar logueado, ve directamente al catálogo con el menú de admin
-      },
-      {
-        path: 'catalogo',
-        component: CatalogView
-      },
       {
         path: 'productos',
         component: () => import('../views/ProductosView.vue')
@@ -50,7 +42,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 
